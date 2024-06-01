@@ -1,9 +1,7 @@
 import os
 import json
-import requests
-import config
 import re
-from retry import retry
+from http_req import http_post,manga_image_dl
 
 def download_all(title):
     
@@ -44,27 +42,6 @@ def download_all(title):
 def download_one(ep, title):
     print('todo')
 
-@retry(Exception, tries=3, delay=2, backoff=2)
-def send_http_request(url, headers):
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()  # 如果响应状态码不是 200，将会抛出异常
-    return response
-
-def save_image(url, save_path, pic_token):
-    headers = {
-        'User-Agent': 'ShonenJumpPlus-Android/4.0.4 (Android 14/34/2210132G/UKQ1.230804.001 release-keys)',
-        'Accept-Encoding': 'gzip',
-        'X-GIGA-PAGE-IMAGE-AUTH': pic_token
-    }
-
-    try:
-        response = send_http_request(url, headers)
-    except Exception as e:
-        print("failed")
-    
-    with open(save_path, 'wb') as f:
-        f.write(response.content)
-
 def remove_illegal_characters(path):
     # 定义非法字符的正则表达式模式
     invalid_chars = r'[<>:"|?*\x00-\x1F]'  # Windows中的非法字符
@@ -75,19 +52,7 @@ def remove_illegal_characters(path):
     return clean_path
 
 def download(db_id, out_dir):
-    authorization = config.authorization
-
     url = 'https://shonenjumpplus.com/api/v1/graphql?opname=EpisodeViewer'
-    headers = {
-        'User-Agent': 'ShonenJumpPlus-Android/4.0.4 (Android 14/34/2210132G/UKQ1.230804.001 release-keys)',
-        'Accept': 'multipart/mixed; deferSpec=20220824, application/json',
-        'Accept-Encoding': 'gzip',
-        'Content-Type': 'application/json',
-        'x-apollo-operation-id': '655c41075ff2c491e7b8338a7fb3407782a5e9b4beb6e2397ef330e15d72e34a',
-        'x-apollo-operation-name': 'SeriesDetail',
-        'x-giga-device-id': '20a24c1ed9ed1d39',
-        'authorization': authorization
-    }
     
     payload = {
         "operationName": "EpisodeViewer",
@@ -95,20 +60,10 @@ def download(db_id, out_dir):
         "query": "query EpisodeViewer($episodeID: String!) { episode(databaseId: $episodeID) { pageImageToken  } }"
     }
 
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    response = http_post(url, payload)
     pic_token = response.json()["data"]["episode"]["pageImageToken"]
 
     url = 'https://shonenjumpplus.com/api/v1/graphql?opname=EpisodeViewerConditionallyCacheable'
-    headers = {
-        'User-Agent': 'ShonenJumpPlus-Android/4.0.4 (Android 14/34/2210132G/UKQ1.230804.001 release-keys)',
-        'Accept': 'multipart/mixed; deferSpec=20220824, application/json',
-        'Accept-Encoding': 'gzip',
-        'Content-Type': 'application/json',
-        'x-apollo-operation-id': '655c41075ff2c491e7b8338a7fb3407782a5e9b4beb6e2397ef330e15d72e34a',
-        'x-apollo-operation-name': 'SeriesDetail',
-        'x-giga-device-id': '20a24c1ed9ed1d39',
-        'authorization': authorization
-    }
     
     payload = {
         "operationName": "EpisodeViewerConditionallyCacheable",
@@ -116,7 +71,7 @@ def download(db_id, out_dir):
         "query": "query EpisodeViewerConditionallyCacheable($episodeID: String!) { episode(databaseId: $episodeID) { id databaseId pageImages { totalCount edges { node { src width height tshirtUrl clickableAreas { __typename ...ClickableArea } } } } purchaseInfo { __typename ...PurchaseInfo } } }  fragment ClickableArea on Clickable { __typename appUrl position { __typename ... on PageIndexReadableProductPosition { pageIndex: index } ... on CFIReadableProductPosition { cfi } } ... on ClickableRect { height left top width } }  fragment PurchaseInfo on PurchaseInfo { isFree hasPurchased hasPurchasedViaTicket purchasable purchasableViaTicket purchasableViaPaidPoint purchasableViaOnetimeFree unitPrice rentable rentalEndAt hasRented rentableByPaidPointOnly rentalTermMin }"
     }
 
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    response = http_post(url, payload)
     
     pic_json = response.json()["data"]["episode"]["pageImages"]
     pic_count = str(pic_json["totalCount"])
@@ -135,4 +90,4 @@ def download(db_id, out_dir):
 
         save_path = clean_out_dir+str(i + 1).zfill(len(pic_count))+".png"
         
-        save_image(url, save_path, pic_token)
+        manga_image_dl(url, save_path, pic_token)

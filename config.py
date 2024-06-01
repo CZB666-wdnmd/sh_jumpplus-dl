@@ -1,23 +1,37 @@
 import os
 import json
 
-def load_token():
+CONFIG_FILE = '.config.json'
+
+def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
-            config = json.load(file)
-            return config.get('authorization')
-    return None
+            return json.load(file)
+    return {}
 
-def save_token(token):
+def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
-        config = {'authorization': token}
-        json.dump(config, file)
+        json.dump(config, file, indent=4)
 
+def get_or_prompt(config, key, prompt_message):
+    if key not in config or not config[key]:
+        config[key] = input(prompt_message)
+    return config[key]
 
-CONFIG_FILE = '.config.json'
-authorization = load_token()
-if not authorization:
-    authorization = input("Enter the authorization token (including 'Bearer '): ")
-    save_token(authorization)
-print("Token is loaded from config")
-authorization = load_token()
+# Load existing configuration
+config = load_config()
+
+# Prompt for missing configuration values
+config['authorization'] = get_or_prompt(config, 'authorization', "Enter the authorization token (including 'Bearer '): ")
+config['ua'] = get_or_prompt(config, 'ua', "Enter the user agent string: ")
+
+# Save updated configuration
+save_config(config)
+
+# Print confirmation message
+print("Configuration values are loaded from config")
+
+# Reload configuration to confirm
+config = load_config()
+authorization = config['authorization']
+ua = config['ua']
