@@ -4,7 +4,6 @@ import re
 from http_req import http_post,manga_image_dl
 
 def download_all(title):
-    
     # 寻找与标题匹配的文件
     episode_number = 1
     found = True
@@ -23,11 +22,16 @@ def download_all(title):
                 database_id = data['databaseId']
                 if accessibility == "READABLE":
                     episode_number += 1
-                    subtitle = "" if data.get('subtitle') == "null" else ' ' + data.get('subtitle')
+                    try:
+                        subtitle = data['subtitle']
+                    except Exception as e:
+                        subtitle = ""
+                        print("no subtittle")
                     thumbnail_uri_template = data['thumbnailUriTemplate']
                     # 返回所需字段
                     out_dir = title+"/"+episode_title+subtitle+"/"
                     print("downloading episode" + str(episode_number))
+                    print(out_dir)
                     download(database_id, out_dir)
                     continue
                 print("Skip not free" + episode_title)

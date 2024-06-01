@@ -56,4 +56,5 @@ def fetch_series_detail(series_id):
     thumbnail_uri_template = series["thumbnailUriTemplate"]
     thumbnail_url = thumbnail_uri_template.format(height=100000, width=100000)
     http_img_dl(thumbnail_url, os.path.join(title, "ThumbnailImage_little.png"))
+    return title
 
