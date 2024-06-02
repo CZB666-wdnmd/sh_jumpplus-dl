@@ -2,6 +2,7 @@ import os
 import json
 import re
 from http_req import http_post,manga_image_dl
+from image_dl import DownloadManager, DownloadTask
 
 def download_all(title):
     # 寻找与标题匹配的文件
@@ -10,7 +11,6 @@ def download_all(title):
     while found:
         filename = os.path.join(title, f"episode_{episode_number}.json")
         if os.path.exists(filename):
-            found = True
             with open(filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)["node"]
                 print(filename)
@@ -95,3 +95,9 @@ def download(db_id, out_dir):
         save_path = clean_out_dir+str(i + 1).zfill(len(pic_count))+".png"
         
         manga_image_dl(url, save_path, pic_token)
+
+        manager = DownloadManager(num_threads=4)
+        manager.add_task(DownloadTask(url, save_path, pic_token))
+
+    manager.start()
+    manager.wait_for_completion()

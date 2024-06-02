@@ -32,37 +32,3 @@ def http_img_dl(url, save_path):
     else:
         response.raise_for_status()
 
-def manga_image_dl(url, save_path, pic_token):
-    headers = {
-        'User-Agent': config.ua,
-        'Accept-Encoding': 'gzip',
-        'X-GIGA-PAGE-IMAGE-AUTH': pic_token
-    }
-
-    proxy = 'http://10.0.0.75:9003'
-    proxies = {
-        'http': proxy,
-        'https': proxy
-    }
-    
-    max_retries = 5
-    retries = 0
-    while retries < max_retries:
-        try:
-            response = requests.get(url, headers=headers, proxies=proxies, verify=False)
-            if response.status_code == 200:
-                with open(save_path, 'wb') as f:
-                    f.write(response.content)
-                print("Image downloaded successfully!")
-                return True
-            else:
-                print(f"Failed to download image. Status code: {response.status_code}")
-        except Exception as e:
-            print(f"Failed to download image. Error: {str(e)}")
-        
-        retries += 1
-        print(f"Retrying ({retries}/{max_retries})...")
-        time.sleep(1)  # Wait for 1 second before retrying
-        
-    print("Failed to download image after multiple attempts.")
-    return False
