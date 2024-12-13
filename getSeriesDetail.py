@@ -7,7 +7,7 @@ from http_req import http_post,http_img_dl
 #请求需要头authorization
 #请求体见下payload
 
-def fetch_series_detail(series_id, needSave = False):
+def fetch_series_detail(series_id, needSave = False, show_info = False):
     url = 'https://shonenjumpplus.com/api/v1/graphql?opname=SeriesDetail'
     
     payload = {
@@ -63,9 +63,14 @@ def fetch_series_detail(series_id, needSave = False):
     horizontalThumbnail_url = horizontalThumbnail_url.replace("{width}", str(horizontalThumbnail_width))
     thumbnailUriTemplate = thumbnailUriTemplate.replace("{width}", "999999999")
     
+    if show_info:
+        return response.json()
+    
     if needSave:
-        http_img_dl(horizontalThumbnail_url, f"{title}_horizontal_thumbnail.jpg")
-        http_img_dl(thumbnailUriTemplate, f"{title}_thumbnail.jpg")
+        if not os.path.exists(title):
+            os.makedirs(title)
+        http_img_dl(horizontalThumbnail_url, f"{title}/horizontal_thumbnail.jpg")
+        http_img_dl(thumbnailUriTemplate, f"{title}/thumbnail.jpg")
         with open(f"{title}/series.json", "w", encoding="utf-8") as f:
             json.dump(response.json(), f, ensure_ascii=False, indent=4)
 

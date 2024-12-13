@@ -2,17 +2,33 @@ import config
 from getSeriesDetail import fetch_series_detail
 from getSeriesDetailEpisodeList import fetch_series_detail_episode_list
 import argparse
-
-def config_settings():
-    config.reconfig
+import json
+from getEpisodeViewer import fetch_ep_viewer
+from getDonwloadList import make_ep_list, getPages
+from http_req import download_pic_src
 
 def get_info(id):
-    title = fetch_series_detail(id)
+    series_info = fetch_series_detail(id, show_info=True)
+
+    ep_list = fetch_series_detail_episode_list(id, show_info=True)
+
+    series = ep_list.get('data', {}).get('series', {})
+    episodes = series.get('episodes', {}).get('edges', [])
+    for index, edge in enumerate(episodes, start=1):
+        pass
+    
 
 def download(id):
-    title = fetch_series_detail(id)
-    fetch_series_detail_episode_list(id, title)
-    download_all(title)
+    title = fetch_series_detail(id, True, False)
+    fetch_series_detail_episode_list(id, title, True, False)
+    db_id, out_dir_list = make_ep_list(title)
+    for ep in db_id:
+        pic_url = getPages(ep)
+        out_dir = out_dir_list[db_id.index(ep)]
+        pic_token = fetch_ep_viewer(ep, out_dir, True, True)
+        download_pic_src(pic_url, out_dir, pic_token)
+
+
 
 def main():
     config

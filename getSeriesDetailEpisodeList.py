@@ -6,7 +6,7 @@ from http_req import http_img_dl
         
 #读取漫画列表
 
-def fetch_series_detail_episode_list(series_id, title, needSave = False):
+def fetch_series_detail_episode_list(series_id, title = "", needSave = False, show_info = False):
     url = 'https://shonenjumpplus.com/api/v1/graphql?opname=SeriesDetailEpisodeList'
 
     ep_response = get_episode_count(series_id)
@@ -21,6 +21,9 @@ def fetch_series_detail_episode_list(series_id, title, needSave = False):
 
     response = http_post(url, payload)
     json_data = response.json()
+
+    if show_info:
+        return response.json()
 
     if needSave:
         save_edges_to_json(json_data, title)

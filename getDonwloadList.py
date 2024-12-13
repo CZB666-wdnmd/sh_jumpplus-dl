@@ -5,17 +5,13 @@ from getSeriesDetailEpisodeList import fetch_series_detail_episode_list
 from getEpisodeViewer import fetch_ep_viewer
 from http_req import http_img_dl
 from http_req import http_post
-
-def get_all_metadata(series_id):
-    title = fetch_series_detail(series_id, True)
-    fetch_series_detail_episode_list(series_id, title, True)
-
-    return title
+from http_req import remove_illegal_characters
 
 def make_ep_list(title):
     episode_number = 1
     found = True
     db_id = []
+    out_dir_list = []
     while found:
         filename = os.path.join(title, f"episode_{episode_number}.json")
         if os.path.exists(filename):
@@ -24,22 +20,22 @@ def make_ep_list(title):
                 print(filename)
                 episode_title = data['title']
                 database_id = data['databaseId']
-                try:
-                    subtitle = data['subtitle']
-                except Exception as e:
+                subtitle = data['subtitle']
+                if subtitle is None:
                     subtitle = ""
-                    print("no subtittle")
-
-                out_dir = title+"/"+episode_title+subtitle+"/"
-                http_img_dl(data['thumbnailUriTemplate'], out_dir+"thumbnail.jpg")
+                out_dir = title+"/"+episode_title+subtitle
+                out_dir = remove_illegal_characters(out_dir)
+                if not os.path.exists(out_dir):
+                    os.makedirs(out_dir)
+                print(out_dir)
+                http_img_dl(data['thumbnailUriTemplate'], out_dir+"/thumbnail.jpg")
                 db_id.append(database_id)
-
-                episode_number += 1
+                out_dir_list.append(out_dir)
         else:
             found = False
         episode_number += 1
     
-    return db_id
+    return db_id, out_dir_list
 
 def getPages(db_id, needSave = False):
     url = "https://shonenjumpplus.com/api/v1/graphql?opname=EpisodeViewerConditionallyCacheable"

@@ -4,7 +4,7 @@ from http_req import http_post
 
 #获取漫画token方法 get_token(ep_id, req_token = True)
 
-def fetch_ep_viewer(ep_id, need_save = False, req_token = False):
+def fetch_ep_viewer(ep_id, save_path="", need_save = False, req_token = False):
     url = "https://shonenjumpplus.com/api/v1/graphql?opname=EpisodeViewer"
 
     payload = {
@@ -14,12 +14,12 @@ def fetch_ep_viewer(ep_id, need_save = False, req_token = False):
     }
     
     response = http_post(url, payload)
-
-    if req_token:
-        return response.json()["data"]["episode"]["pageImageToken"]
     
     if need_save:
+        print(response.json())
         filename = response.json()["data"]["episode"]["title"]
-        with open(f"{filename}_ep_viewer.json", "w") as f:
+        with open(os.path.join(save_path, f"{filename}_ep_viewer.json"), "w") as f:
             json.dump(response.json(), f, indent=4)
-    
+            
+    if req_token:
+        return response.json()["data"]["episode"]["pageImageToken"]

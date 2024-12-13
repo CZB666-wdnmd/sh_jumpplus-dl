@@ -8,6 +8,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 def remove_illegal_characters(path):
     # 定义非法字符的正则表达式模式
     invalid_chars = r'[<>:"|?*\x00-\x1F]'  # Windows中的非法字符
+    if os.name == 'nt':  # Windows系统
+        invalid_chars = r'[<>:"|?*\x00-\x1F]'
+    else:  # Linux系统
+        invalid_chars = r'[<>:"|?*\x00]'
 
     # 用正则表达式将非法字符替换为空字符串
     clean_path = re.sub(invalid_chars, '', path)
@@ -44,6 +48,7 @@ def http_get(url):
 
 def http_img_dl(url, save_path):
     response = http_get(url)
+    url = url.replace("{height}", "99999999").replace("{width}", "99999999")
     save_path = remove_illegal_characters(save_path)
     if response.status_code == 200:
         with open(save_path, 'wb') as f:
@@ -73,8 +78,8 @@ def download_file(url, dest_folder, file_name, auth_token, retries=3):
     return False
 
 def download_pic_src(url_list, dest_folder, auth_token):
-    max_workers = config.max_workers
-    retries = config.retries
+    max_workers = config.simultaneous_downloads
+    retries = config.retry_count
 
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
