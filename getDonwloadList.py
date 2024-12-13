@@ -21,6 +21,7 @@ def make_ep_list(title):
                 episode_title = data['title']
                 database_id = data['databaseId']
                 subtitle = data['subtitle']
+                accessibility = data['accessibility']
                 if subtitle is None:
                     subtitle = ""
                 out_dir = title+"/"+episode_title+subtitle
@@ -29,6 +30,9 @@ def make_ep_list(title):
                     os.makedirs(out_dir)
                 print(out_dir)
                 http_img_dl(data['thumbnailUriTemplate'], out_dir+"/thumbnail.jpg")
+                if accessibility != "READABLE":
+                    episode_number += 1
+                    continue
                 db_id.append(database_id)
                 out_dir_list.append(out_dir)
         else:
