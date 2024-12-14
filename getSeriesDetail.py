@@ -74,4 +74,18 @@ def fetch_series_detail(series_id, needSave = False, show_info = False):
         with open(f"{title}/series.json", "w", encoding="utf-8") as f:
             json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
+        with open(f"{title}/series_info.json", "w", encoding="utf-8") as f:
+            json.dump(fetch_series_info(series_id).json(), f, ensure_ascii=False, indent=4)
+
     return title
+
+def fetch_series_info(series_id):
+    url = "https://shonenjumpplus.com/api/v1/graphql?opname=SeriesDetailSeriesInfo"
+
+    payload = {
+        "operationName":"SeriesDetailSeriesInfo",
+        "variables":{"id":series_id},
+        "query":"query SeriesDetailSeriesInfo($id: String!) { series(databaseId: $id) { __typename id databaseId ...SeriesDetailInfo } }  fragment SeriesAuthors on Series { authors { id databaseId name } }  fragment PurchaseInfo on PurchaseInfo { isFree hasPurchased hasPurchasedViaTicket purchasable purchasableViaTicket purchasableViaPaidPoint purchasableViaOnetimeFree unitPrice rentable rentalEndAt hasRented rentableByPaidPointOnly rentalTermMin }  fragment FreeSerialEpisodeItem on Episode { id databaseId title thumbnailUriTemplate publishedAt purchaseInfo { __typename ...PurchaseInfo } accessibility }  fragment AnalyticsParameters on ReadableProduct { __typename id databaseId publisherId title ... on Episode { publishedAt series { id databaseId publisherId title serialUpdateScheduleLabel jamEpisodeWorkType } } ... on Volume { openAt series { id databaseId publisherId title } } ... on Ebook { publishedAt series { id databaseId publisherId title } } ... on Magazine { openAt magazineLabel { id databaseId publisherId title } } ... on SpecialContent { publishedAt series { id databaseId publisherId title serialUpdateScheduleLabel jamEpisodeWorkType } } }  fragment SerialInfoIcon on SerialInfo { isOriginal isIndies }  fragment HorizontalRecommendedSeriesItem on Series { id databaseId publisherId title thumbnailUriTemplate readableProducts(first: 1, sort: NUMBER_DESC, types: [VOLUME,EBOOK]) { edges { node { id databaseId thumbnailUriTemplate } } } volumeSeries { id databaseId publisherId title } hasEpisode: hasPublicReadableProduct(type: EPISODE) hasEbook: hasPublicReadableProduct(type: EBOOK) hasVolume: hasPublicReadableProduct(type: VOLUME) hasSpecialContent: hasPublicReadableProduct(type: SPECIAL_CONTENT) serialInfo { __typename ...SerialInfoIcon status } supportsOnetimeFree }  fragment SeriesDetailBottomBanners on Series { id databaseId bannerGroup(groupName: \"series_detail_bottom\") { __typename ... on ImageBanner { databaseId imageUriTemplate imageUrl linkUrl } ... on YouTubeBanner { videoId } } }  fragment SeriesShareContent on Series { id databaseId publisherId title shareUrl serialUpdateScheduleLabel openAt seriesAuthor: author { id databaseId name } firstEpisode { id databaseId permalink } }  fragment SeriesDetailInfo on Series { __typename id databaseId publisherId shortDescription description ...SeriesAuthors freeSerialEpisodes { __typename id databaseId ...FreeSerialEpisodeItem ...AnalyticsParameters } mainGenre { id name series(first: 11, sort: SHUFFLE) { edges { node { __typename id databaseId ...HorizontalRecommendedSeriesItem } } } } ...SeriesDetailBottomBanners ...SeriesShareContent recommendedSeriesByAuthor: recommendedSeriesByType(type: SERIES_BY_AUTHOR) { __typename id databaseId ...HorizontalRecommendedSeriesItem } }"
+    }
+
+    return http_post(url, payload)

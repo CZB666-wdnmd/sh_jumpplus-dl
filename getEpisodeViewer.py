@@ -16,7 +16,6 @@ def fetch_ep_viewer(ep_id, save_path="", need_save = False, req_token = False):
     response = http_post(url, payload)
     
     if need_save:
-        print(response.json())
         filename = response.json()["data"]["episode"]["title"]
         with open(os.path.join(save_path, f"{filename}_ep_viewer.json"), "w") as f:
             json.dump(response.json(), f, indent=4)

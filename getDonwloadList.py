@@ -7,17 +7,13 @@ from http_req import http_img_dl
 from http_req import http_post
 from http_req import remove_illegal_characters
 
-def make_ep_list(title):
-    episode_number = 1
-    found = True
+def make_ep_list(title, ep_json_list):
     db_id = []
     out_dir_list = []
-    while found:
-        filename = os.path.join(title, f"episode_{episode_number}.json")
+    for filename in ep_json_list:
         if os.path.exists(filename):
             with open(filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)["node"]
-                print(filename)
                 episode_title = data['title']
                 database_id = data['databaseId']
                 subtitle = data['subtitle']
@@ -28,16 +24,10 @@ def make_ep_list(title):
                 out_dir = remove_illegal_characters(out_dir)
                 if not os.path.exists(out_dir):
                     os.makedirs(out_dir)
-                print(out_dir)
                 http_img_dl(data['thumbnailUriTemplate'], out_dir+"/thumbnail.jpg")
-                if accessibility != "READABLE":
-                    episode_number += 1
-                    continue
-                db_id.append(database_id)
-                out_dir_list.append(out_dir)
-        else:
-            found = False
-        episode_number += 1
+                if accessibility == "READABLE":
+                    db_id.append(database_id)
+                    out_dir_list.append(out_dir)
     
     return db_id, out_dir_list
 

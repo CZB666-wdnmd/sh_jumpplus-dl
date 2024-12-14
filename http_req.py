@@ -47,12 +47,14 @@ def http_get(url):
     return response
 
 def http_img_dl(url, save_path):
-    response = http_get(url)
-    url = url.replace("{height}", "99999999").replace("{width}", "99999999")
+    url = url.replace("{height}", "999999").replace("{width}", "999999")
     save_path = remove_illegal_characters(save_path)
+    print(url)
+    response = requests.get(url, stream=True)
     if response.status_code == 200:
         with open(save_path, 'wb') as f:
-            f.write(response.content)
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
 
 def download_file(url, dest_folder, file_name, auth_token, retries=3):
     headers = {
